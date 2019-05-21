@@ -6,4 +6,17 @@
     <string name="error_speed_illegal">Error UizaSpeed: Please set speed with the value between -3 and 3.</string>
     <string name="tks_4_watching">Thanks for your watching</string>
     <string name="mux_environment_key">e1mcat6hn6v40kh9gvh9nm6se</string>
+    <string name="default_stats_1">----</string>
+    <string name="default_stats_2">-- / --</string>
+    <string name="default_stats_3">-- / -- / --</string>
+    <string name="stat_entity_id">Video Entity ID</string>
+    <string name="stat_buffer_health">Buffer Health</string>
+    <string name="stat_network_activity">Network Activity</string>
+    <string name="stat_volume_normalized">Volume / Normalized</string>
+    <string name="stat_current_optimal_res">Current / Optimal Res</string>
+    <string name="stat_viewport_frames">Viewport / Frames</string>
+    <string name="stat_connection_speed">Connection Speed</string>
+    <string name="stat_host">Host</string>
+    <string name="stat_sdk_player_api_version">SDK / Player / API Version</string>
+    <string name="stat_os_device_info">OS / Device Info</string>
 </resources>
