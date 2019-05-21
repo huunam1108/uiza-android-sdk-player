@@ -8,7 +8,9 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.database.ContentObserver;
 import android.graphics.Color;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -42,7 +44,6 @@ import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.analytics.AnalyticsListener;
-import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.audio.AudioListener;
 import com.google.android.exoplayer2.decoder.DecoderCounters;
 import com.google.android.exoplayer2.metadata.MetadataOutput;
@@ -55,7 +56,6 @@ import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.video.VideoListener;
-import com.google.android.exoplayer2.video.VideoRendererEventListener;
 import com.google.android.gms.cast.MediaInfo;
 import com.google.android.gms.cast.MediaMetadata;
 import com.google.android.gms.cast.MediaTrack;
@@ -3577,7 +3577,6 @@ public class UZVideo extends RelativeLayout
                     MediaSourceEventListener.LoadEventInfo loadEventInfo,
                     MediaSourceEventListener.MediaLoadData mediaLoadData) {
                 // OK
-                Log.e("x", "xxxx " + mediaLoadData.trackFormat);
             }
 
             @Override
@@ -3596,7 +3595,6 @@ public class UZVideo extends RelativeLayout
 
             @Override
             public void onSurfaceSizeChanged(EventTime eventTime, int width, int height) {
-                Log.e("x", "yyyy onSurfaceSizeChanged " + width + " + " + height);
                 // OK
                 viewPortWidth = width;
                 viewPortHeight = height;
@@ -3610,29 +3608,36 @@ public class UZVideo extends RelativeLayout
             }
 
             @Override
-            public void onDecoderInitialized(EventTime eventTime, int trackType, String decoderName,
-                    long initializationDurationMs) {
-                // OK
+            public void onVolumeChanged(EventTime eventTime, float volume) {
+                depictVolumeInfo(Math.round(volume * 100));
             }
 
             @Override
-            public void onDecoderInputFormatChanged(EventTime eventTime, int trackType,
-                    Format format) {
+            public void onDecoderInputFormatChanged(EventTime eventTime, int trackType, Format format) {
                 // OK
-                Log.e("x", "vvvv  onDecoderInputFormatChanged " + format.width + " + " + format.height + " + " + format.codecs);
-            }
-
-
-            @Override
-            public void onAudioAttributesChanged(EventTime eventTime,
-                    AudioAttributes audioAttributes) {
-                // OK
+                Log.e("x", "vvvv  onDecoderInputFormatChanged "
+                        + format.width
+                        + " + "
+                        + format.height
+                        + " + "
+                        + format.containerMimeType
+                        + " + "
+                        + format.frameRate
+                        + " + "
+                        + format.sampleMimeType);
+                depictVideoDetailInfo(format);
             }
 
             @Override
             public void onAudioUnderrun(EventTime eventTime, int bufferSize, long bufferSizeMs,
                     long elapsedSinceLastFeedMs) {
                 // OK
+                Log.e("x", "vvvv onAudioUnderrun "
+                        + bufferSize
+                        + " + "
+                        + bufferSizeMs
+                        + "  + "
+                        + elapsedSinceLastFeedMs);
             }
 
             @Override
@@ -3644,20 +3649,19 @@ public class UZVideo extends RelativeLayout
             }
 
             @Override
-            public void onVideoSizeChanged(EventTime eventTime, int width, int height,
-                    int unappliedRotationDegrees, float pixelWidthHeightRatio) {
-                // OK
-                Log.e("x", "vvvv  onVideoSizeChanged " + width + " + " + height + " + "+ pixelWidthHeightRatio);
-            }
-
-            @Override
             public void onRenderedFirstFrame(EventTime eventTime, @Nullable Surface surface) {
                 // OK
                 startPlayerStats();
+                SettingsContentObserver mSettingsContentObserver =
+                        new SettingsContentObserver(getContext(), new Handler());
+                getContext().getContentResolver()
+                        .registerContentObserver(android.provider.Settings.System.CONTENT_URI, true,
+                                mSettingsContentObserver);
             }
 
         });
     }
+
 
     public static final int MSG_UPDATE_STATS = 10005;
     public static final int MSG_UPDATE_STATS_NW_ONLY = 10006;
@@ -3684,14 +3688,32 @@ public class UZVideo extends RelativeLayout
         }
     }
     private void startPlayerStats() {
+        uiHandler.removeMessages(MSG_UPDATE_STATS);
+        uiHandler.removeMessages(MSG_UPDATE_STATS_NW_ONLY);
         depictVideoInfo();
         depictDeviceInfo();
         depictVersionInfo();
-        uiHandler.removeMessages(MSG_UPDATE_STATS);
-        uiHandler.removeMessages(MSG_UPDATE_STATS_NW_ONLY);
         depictPlayerStats();
         depictPlayerNWStats();
         depictViewPortFrameInfo();
+    }
+
+    private void depictVolumeInfo(int volumePercentage) {
+        statsForNerdsView.setTextVolumeNormalized(
+                String.format(Locale.getDefault(), "%d%% / %d%%", volumePercentage, volumePercentage));
+    }
+
+    // Video format & audio format
+    private void depictVideoDetailInfo(Format format) {
+        if (format == null || TextUtils.isEmpty(format.sampleMimeType)) return;
+        if (format.sampleMimeType.startsWith("audio")) {
+            statsForNerdsView.setTextAudioFormat(
+                    String.format(Locale.getDefault(), "%s %dHz", format.sampleMimeType, format.sampleRate));
+        } else if (format.sampleMimeType.startsWith("video")) {
+            statsForNerdsView.setTextVideoFormat(
+                    String.format(Locale.getDefault(), "%s %dx%d@%d", format.sampleMimeType, format.width,
+                            format.height, Math.round(format.frameRate)));
+        }
     }
 
     // Viewport and dropped frames
@@ -3732,5 +3754,26 @@ public class UZVideo extends RelativeLayout
         statsForNerdsView.setTextNetworkActivity(
                 ConvertUtils.humanReadableByteCount(bytesLoaded, true, false));
         uiHandler.sendEmptyMessageDelayed(MSG_UPDATE_STATS_NW_ONLY, 1100);
+    }
+
+    public class SettingsContentObserver extends ContentObserver {
+        private AudioManager audioManager;
+
+        public SettingsContentObserver(Context context, Handler handler) {
+            super(handler);
+            audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        }
+
+        @Override
+        public boolean deliverSelfNotifications() {
+            return false;
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            int currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+            int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+            getPlayer().setVolume(currentVolume * 1.0f / maxVolume);
+        }
     }
 }

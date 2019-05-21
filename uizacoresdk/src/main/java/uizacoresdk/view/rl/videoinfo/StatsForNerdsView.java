@@ -11,7 +11,7 @@ import uizacoresdk.R;
 public class StatsForNerdsView extends RelativeLayout {
     private TextView textEntityId, textBufferHealth, textNetworkActivity, textVolumeNormalized,
             textCurrentOptimalRes, textViewPortFrame, textConnectionSpeed, textHost, textVersion,
-            textDeviceInfo;
+            textDeviceInfo, textVideoFormat, textAudioFormat;
 
     public StatsForNerdsView(Context context) {
         super(context);
@@ -29,8 +29,7 @@ public class StatsForNerdsView extends RelativeLayout {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public StatsForNerdsView(Context context, AttributeSet attrs, int defStyleAttr,
-            int defStyleRes) {
+    public StatsForNerdsView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         init();
     }
@@ -47,6 +46,8 @@ public class StatsForNerdsView extends RelativeLayout {
         textHost = findViewById(R.id.text_host);
         textVersion = findViewById(R.id.text_versions);
         textDeviceInfo = findViewById(R.id.text_device_info);
+        textVideoFormat = findViewById(R.id.text_video_format);
+        textAudioFormat = findViewById(R.id.text_audio_format);
     }
 
     public void setEntityInfo(String entityId) {
@@ -87,5 +88,13 @@ public class StatsForNerdsView extends RelativeLayout {
 
     public void setTextDeviceInfo(String value) {
         textDeviceInfo.setText(value);
+    }
+
+    public void setTextVideoFormat(String value) {
+        textVideoFormat.setText(value);
+    }
+
+    public void setTextAudioFormat(String value) {
+        textAudioFormat.setText(value);
     }
 }
