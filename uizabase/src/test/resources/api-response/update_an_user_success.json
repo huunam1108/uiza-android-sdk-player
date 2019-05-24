@@ -1,0 +1,18 @@
+{
+  "data": {
+    "id": "37d6706e-be91-463e-b3b3-b69451dd4752",
+    "isAdmin": 1,
+    "username": "user_test",
+    "email": "user_test@uiza.io",
+    "updatedAt": "2018-06-22T00:00:00.000Z",
+    "createdAt": "2018-06-22T18:05:47.000Z"
+  },
+  "version": 3,
+  "datetime": "2018-06-22T18:27:24.882Z",
+  "policy": "public",
+  "requestId": "5b7c0a49-427c-49e8-b112-820b49217a22",
+  "serviceName": "api",
+  "message": "OK",
+  "code": 200,
+  "type": "SUCCESS"
+}
